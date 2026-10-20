@@ -143,6 +143,7 @@ threatlens/
 ├── app.py                  # Complete application — single source file
 ├── requirements.txt        # Python dependencies
 ├── README.md               # This file
+├── LICENSE.md               # License file
 ```
 
 > `threatlens_history.db` is generated automatically at runtime. Add it to `.gitignore`
@@ -237,7 +238,7 @@ All other imports (`sqlite3`, `ipaddress`, `re`, `base64`, `csv`, `io`, `json`,
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](LICENSE.md).
 
 ---
 
