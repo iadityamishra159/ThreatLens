@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ThreatLens — Project Report</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 15px; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    background: #f0f4f8;
+    color: #1f2328;
+    line-height: 1.7;
+  }
+
+  .page {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #fff;
+    box-shadow: 0 2px 20px rgba(26,58,92,0.12);
+  }
+
+  /* Cover */
+  .cover {
+    background: linear-gradient(135deg, #1a3a5c 0%, #2c6fad 100%);
+    color: #fff;
+    padding: 56px 60px 48px;
+    text-align: center;
+  }
+  .cover .badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.30);
+    border-radius: 20px;
+    padding: 4px 18px;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+  }
+  .cover h1 { font-size: 2.4rem; font-weight: 800; margin-bottom: 8px; }
+  .cover .subtitle { font-size: 1.05rem; opacity: 0.85; margin-bottom: 32px; }
+  .cover .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+  .cover .meta-item {
+    background: rgba(255,255,255,0.13);
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+  .cover .meta-item .lbl { font-size: 0.68rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.07em; }
+  .cover .meta-item .val { font-size: 0.92rem; font-weight: 600; }
+
+  /* TOC */
+  .toc {
+    background: #f7f9fc;
+    border-bottom: 2px solid #e5e7eb;
+    padding: 32px 60px;
+  }
+  .toc h2 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: #57606a; margin-bottom: 16px; }
+  .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 40px; }
+  .toc-item {
+    display: flex; align-items: baseline; gap: 8px;
+    font-size: 0.87rem; padding: 3px 0;
+    color: #2c6fad; border-bottom: 1px dotted #ccd6e8;
+  }
+  .toc-item .num { font-weight: 700; color: #1a3a5c; min-width: 30px; }
+
+  /* Content */
+  .content { padding: 0 60px 56px; }
+
+  .section { padding-top: 44px; }
+  h2.st {
+    font-size: 1.22rem; font-weight: 700; color: #1a3a5c;
+    border-bottom: 2.5px solid #2c6fad;
+    padding-bottom: 7px; margin-bottom: 16px;
+  }
+  h3.sub { font-size: 0.97rem; font-weight: 700; color: #2c6fad; margin: 22px 0 8px; }
+  p { margin-bottom: 12px; font-size: 0.92rem; }
+
+  /* Tables */
+  .tw { overflow-x: auto; margin: 16px 0 22px; border-radius: 7px; border: 1px solid #ccd6e8; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  thead tr { background: #1a3a5c; color: #fff; }
+  thead th { padding: 11px 16px; text-align: left; font-weight: 600; white-space: nowrap; }
+  tbody tr:nth-child(even) { background: #f4f7ff; }
+  tbody tr:hover { background: #e6effe; }
+  tbody td { padding: 9px 16px; border-bottom: 1px solid #e5e7eb; vertical-align: top; line-height: 1.55; }
+  tbody tr:last-child td { border-bottom: none; }
+
+  code {
+    font-family: "Cascadia Code", Consolas, monospace;
+    font-size: 0.80rem;
+    background: #f0f4f8;
+    border: 1px solid #ccd6e8;
+    border-radius: 3px;
+    padding: 1px 5px;
+  }
+
+  /* Tags */
+  .tag {
+    display: inline-block;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .tag-grey   { background:#f0f2f4; color:#444; border:1px solid #ccc; }
+  .tag-blue   { background:#dbeafe; color:#1a3a5c; border:1px solid #93c5fd; }
+  .tag-red    { background:#fde8e8; color:#b91c1c; border:1px solid #fca5a5; }
+  .tag-orange { background:#fef3e2; color:#92400e; border:1px solid #fcd34d; }
+  .tag-green  { background:#dcfce7; color:#14532d; border:1px solid #86efac; }
+  .tag-purple { background:#ede9fe; color:#4c1d95; border:1px solid #c4b5fd; }
+
+  /* Risk chips */
+  .rc { display:inline-flex; align-items:center; gap:4px; font-weight:700; font-size:0.78rem; padding:3px 10px; border-radius:4px; letter-spacing:0.04em; white-space:nowrap; }
+  .rc-m { background:#fde8e8; color:#b91c1c; border:1px solid #c0392b; }
+  .rc-s { background:#fef3e2; color:#92400e; border:1px solid #e67e22; }
+  .rc-c { background:#dcfce7; color:#14532d; border:1px solid #27ae60; }
+  .rc-i { background:#dbeafe; color:#1e3a8a; border:1px solid #2980b9; }
+  .rc-f { background:#f4f6f7; color:#555;    border:1px solid #bdc3c7; }
+
+  /* Lists */
+  ul.rl, ol.rl { margin: 8px 0 14px 22px; font-size: 0.91rem; }
+  ul.rl li, ol.rl li { margin-bottom: 5px; }
+
+  /* Callout */
+  .callout {
+    border-left: 4px solid #2c6fad; background: #eff6ff;
+    border-radius: 0 6px 6px 0; padding: 12px 16px; margin: 14px 0; font-size: 0.89rem;
+  }
+  .callout.warn { border-color: #e67e22; background: #fff7ed; }
+
+  /* Arch diagram */
+  .arch {
+    background: #f7f9fc; border: 1px solid #ccd6e8; border-radius: 6px;
+    padding: 20px 24px; font-family: "Cascadia Code", Consolas, monospace;
+    font-size: 0.78rem; line-height: 1.9; overflow-x: auto; margin: 16px 0;
+  }
+  .arch .ln { color: #2c6fad; font-weight: 700; }
+  .arch .fn { color: #c0392b; }
+
+  hr.div { border: none; border-top: 1px solid #e5e7eb; margin: 36px 0 0; }
+
+  .footer {
+    text-align: center; font-size: 0.74rem; color: #57606a;
+    padding: 18px 0 26px; border-top: 1px solid #e5e7eb; margin-top: 44px;
+  }
+
+  @media print {
+    body { background: #fff; }
+    .page { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- COVER -->
+<div class="cover">
+  <div class="badge">Project Report</div>
+  <h1>🔍 ThreatLens</h1>
+  <div class="subtitle">Cyber Threat Intelligence Analyzer</div>
+  <div class="meta-grid">
+    <div class="meta-item"><div class="lbl">Version</div><div class="val">1.0.0</div></div>
+    <div class="meta-item"><div class="lbl">Language</div><div class="val">Python 3.11</div></div>
+    <div class="meta-item"><div class="lbl">Provider</div><div class="val">VirusTotal v3</div></div>
+    <div class="meta-item"><div class="lbl">Interface</div><div class="val">Streamlit</div></div>
+    <div class="meta-item"><div class="lbl">Source File</div><div class="val">app.py (~1,450 lines)</div></div>
+    <div class="meta-item"><div class="lbl">Functions</div><div class="val">26 total</div></div>
+  </div>
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <h2>Table of Contents</h2>
+  <div class="toc-grid">
+    <div class="toc-item"><span class="num">1.</span>Executive Summary</div>
+    <div class="toc-item"><span class="num">9.</span>Local Investigation History</div>
+    <div class="toc-item"><span class="num">2.</span>Project Overview</div>
+    <div class="toc-item"><span class="num">10.</span>Report Generation</div>
+    <div class="toc-item"><span class="num">3.</span>Technology Stack</div>
+    <div class="toc-item"><span class="num">11.</span>Security &amp; Privacy Design</div>
+    <div class="toc-item"><span class="num">4.</span>System Architecture</div>
+    <div class="toc-item"><span class="num">12.</span>Demonstration Mode</div>
+    <div class="toc-item"><span class="num">5.</span>Indicator Validation</div>
+    <div class="toc-item"><span class="num">13.</span>Installation &amp; Configuration</div>
+    <div class="toc-item"><span class="num">6.</span>VirusTotal API Integration</div>
+    <div class="toc-item"><span class="num">14.</span>Limitations &amp; Future Work</div>
+    <div class="toc-item"><span class="num">7.</span>Risk Assessment Engine</div>
+    <div class="toc-item"><span class="num">15.</span>Conclusion</div>
+    <div class="toc-item"><span class="num">8.</span>Streamlit Dashboard</div>
+    <div class="toc-item"><span class="num">A.</span>Appendix: Function Reference</div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+<!-- 1 -->
+<div class="section">
+  <h2 class="st">1. Executive Summary</h2>
+  <p>ThreatLens is a single-file Python cybersecurity application that enables security professionals, students, and researchers to investigate Indicators of Compromise (IOCs) using the VirusTotal v3 threat intelligence API. The application provides an interactive, browser-based dashboard built with Streamlit, offering real-time reputation lookups, multi-engine detection statistics, color-coded risk classification, actionable defensive recommendations, and downloadable investigation reports in CSV, JSON, and PDF formats.</p>
+  <p>All application logic — API integration, indicator validation, risk analysis, SQLite history management, chart rendering, and report generation — is contained within a single source file (<code>app.py</code>, approximately 1,450 lines). The application runs fully in demonstration mode without any API credentials, making it suitable for offline portfolio presentations and classroom demonstrations.</p>
+  <div class="callout">
+    <strong>Key achievements:</strong> (1) correct VirusTotal v3 API integration for all four IOC categories; (2) a transparent, threshold-based risk engine; (3) professional-grade PDF report generation via ReportLab; (4) a polished blue-and-white Streamlit dashboard with Plotly charts; and (5) a persistent SQLite investigation history with search and filtering.
+  </div>
+</div>
+
+<!-- 2 -->
+<hr class="div">
+<div class="section">
+  <h2 class="st">2. Project Overview</h2>
+  <h3 class="sub">2.1 Objectives</h3>
+  <ul class="rl">
+    <li>Provide a practical tool for investigating IOCs encountered during security incidents or threat hunting activities.</li>
+    <li>Demonstrate integration with a real, production threat intelligence API (VirusTotal v3).</li>
+    <li>Deliver a professional, interactive dashboard that communicates threat data clearly to both technical and non-technical audiences.</li>
+    <li>Generate audit-ready investigation reports in CSV, JSON, and PDF formats.</li>
+    <li>Operate transparently — never inventing data, never misrepresenting demonstration results as live intelligence.</li>
+  </ul>
+  <h3 class="sub">2.2 Supported IOC Types</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>IOC Type</th><th>Examples</th><th>VirusTotal Endpoint</th></tr></thead>
+      <tbody>
+        <tr><td>IPv4 Address</td><td><code>8.8.8.8</code>, <code>192.168.1.1</code></td><td><code>GET /api/v3/ip_addresses/{ip}</code></td></tr>
+        <tr><td>IPv6 Address</td><td><code>2606:4700:4700::1111</code></td><td><code>GET /api/v3/ip_addresses/{ip}</code></td></tr>
+        <tr><td>Domain Name</td><td><code>example.com</code>, <code>malware.io</code></td><td><code>GET /api/v3/domains/{domain}</code></td></tr>
+        <tr><td>URL</td><td><code>https://example.com/path</code></td><td><code>GET /api/v3/urls/{base64url_id}</code></td></tr>
+        <tr><td>File Hash (MD5 / SHA-1 / SHA-256)</td><td>32-, 40-, or 64-char hex strings</td><td><code>GET /api/v3/files/{hash}</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 3 -->
+<hr class="div">
+<div class="section">
+  <h2 class="st">3. Technology Stack</h2>
+  <p>ThreatLens is implemented exclusively in Python 3.11 and relies on a small set of well-established third-party libraries. All standard library modules are used without additional installation.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Package</th><th>Purpose</th><th>Min Version</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Streamlit</strong></td><td>Interactive web dashboard</td><td>1.32.0</td><td><span class="tag tag-grey">Third-party</span></td></tr>
+        <tr><td><strong>Requests</strong></td><td>HTTP API client</td><td>2.31.0</td><td><span class="tag tag-grey">Third-party</span></td></tr>
+        <tr><td><strong>Pandas</strong></td><td>Data processing and history table rendering</td><td>2.0.0</td><td><span class="tag tag-grey">Third-party</span></td></tr>
+        <tr><td><strong>Plotly</strong></td><td>Interactive detection charts (donut + bar)</td><td>5.18.0</td><td><span class="tag tag-grey">Third-party</span></td></tr>
+        <tr><td><strong>ReportLab</strong></td><td>PDF report generation via Platypus layout engine</td><td>4.0.0</td><td><span class="tag tag-grey">Third-party</span></td></tr>
+        <tr><td><code>sqlite3</code>, <code>ipaddress</code>, <code>re</code>, <code>base64</code>, <code>csv</code>, <code>io</code>, <code>json</code>, <code>os</code>, <code>time</code>, <code>urllib</code>, <code>datetime</code>, <code>typing</code></td><td>Validation, storage, encoding, I/O, type hints</td><td>Built-in</td><td><span class="tag tag-blue">Standard Library</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 4 -->
+<hr class="div">
+<div class="section">
+  <h2 class="st">4. System Architecture</h2>
+  <p>The application follows a layered functional architecture within a single Python module. Each layer is logically separated by comment blocks and contains cohesive, single-purpose functions. Data flows downward from input validation through API integration to rendering and persistence — no circular dependencies.</p>
+  <div class="arch">
+<span class="ln">app.py</span>
+├── <span class="ln">Constants &amp; Configuration</span>    API URLs, thresholds, risk level metadata
+├── <span class="ln">Database Layer</span>               <span class="fn">init_db · save_investigation · load_history · clear_history</span>
+├── <span class="ln">Indicator Validation</span>         <span class="fn">classify_indicator()</span>
+├── <span class="ln">VirusTotal API</span>               <span class="fn">_vt_headers · _vt_request · lookup_virustotal()</span>
+├── <span class="ln">Demonstration Mode</span>           <span class="fn">get_demo_result()</span>
+├── <span class="ln">Risk Engine</span>                  <span class="fn">classify_risk · get_recommended_actions()</span>
+├── <span class="ln">Report Generation</span>            <span class="fn">build_csv_report · build_json_report · build_pdf_report()</span>
+└── <span class="ln">Streamlit Dashboard</span>          <span class="fn">render_*() · get_api_key() · main()</span>
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Layer</th><th>Key Functions</th><th>Responsibility</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Constants &amp; Config</strong></td><td>Module-level constants</td><td>API URLs, risk thresholds, indicator type labels, risk level metadata</td></tr>
+        <tr><td><strong>Database</strong></td><td><code>init_db</code>, <code>save_investigation</code>, <code>load_history</code>, <code>clear_history</code></td><td>SQLite schema creation, record persistence, retrieval, history deletion</td></tr>
+        <tr><td><strong>Validation</strong></td><td><code>classify_indicator</code></td><td>IOC type detection, normalization, rejection of malformed input</td></tr>
+        <tr><td><strong>API Integration</strong></td><td><code>_vt_headers</code>, <code>_vt_request</code>, <code>lookup_virustotal</code></td><td>VirusTotal v3 HTTP requests, response parsing, error handling</td></tr>
+        <tr><td><strong>Demo Mode</strong></td><td><code>get_demo_result</code></td><td>Returns labelled sample data when no API key is present</td></tr>
+        <tr><td><strong>Risk Engine</strong></td><td><code>classify_risk</code>, <code>get_recommended_actions</code></td><td>Threshold-based risk classification and defensive guidance</td></tr>
+        <tr><td><strong>Report Generation</strong></td><td><code>build_csv_report</code>, <code>build_json_report</code>, <code>build_pdf_report</code></td><td>In-memory CSV, JSON, and PDF report construction</td></tr>
+        <tr><td><strong>Dashboard &amp; UI</strong></td><td><code>get_api_key</code>, <code>apply_custom_css</code>, <code>render_header</code>, <code>render_sidebar</code>, <code>render_analysis_results</code>, <code>render_history_section</code>, <code>render_about_section</code>, <code>main</code></td><td>Streamlit layout, CSS theming, chart rendering, application entry point</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 5 -->
+<hr class="div">
+<div class="section">
+  <h2 class="st">5. Indicator Validation and Classification</h2>
+  <p>The <code>classify_indicator()</code> function accepts a raw string and returns a three-tuple: <code>(normalized_indicator, type_key, error_message)</code>. It applies validation in a deliberate precedence order to avoid ambiguity:</p>
+  <ol class="rl">
+    <li><strong>URL detection</strong> — strings starting with <code>http://</code> or <code>https://</code> are parsed with <code>urllib.parse.urlparse()</code>. A missing <code>netloc</code> triggers an error.</li>
+    <li><strong>IP address detection</strong> — <code>ipaddress.ip_address()</code> is called; <code>ValueError</code> indicates a non-IP string. Both <code>IPv4Address</code> and <code>IPv6Address</code> are handled.</li>
+    <li><strong>Hash detection</strong> — regex patterns match exact hex lengths: 32 (MD5), 40 (SHA-1), 64 (SHA-256). Matched hashes are lowercased for normalization.</li>
+    <li><strong>Domain detection</strong> — a compiled regex enforces RFC-compliant label and TLD structure.</li>
+    <li><strong>Rejection</strong> — any string that passes none of the above tests returns an empty type key and a descriptive error message displayed in the UI.</li>
+  </ol>
+  <div class="callout">
+    Normalization is deliberately minimal: only hash strings are lowercased. The application never opens URLs, downloads files, or resolves DNS entries during the validation step.
+  </div>
+</div>
+
+<!-- 6 -->
+<hr class="div">
+<div class="section">
+  <h2 class="st">6. VirusTotal API Integration</h2>
+  <h3 class="sub">6.1 Endpoint Mapping</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>IOC Type</th><th>VirusTotal v3 Endpoint</th></tr></thead>
+      <tbody>
+        <tr><td>IPv4 / IPv6</td><td><code>GET /api/v3/ip_addresses/{ip}</code></td></tr>
+        <tr><td>Domain</td><td><code>GET /api/v3/domains/{domain}</code></td></tr>
+        <tr><td>URL</td><td><code>GET /api/v3/urls/{base64url(url), no padding}</code></td></tr>
+        <tr><td>File Hash (MD5 / SHA-1 / SHA-256)</td><td><code>GET /api/v3/files/{hash}</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>URLs are encoded as base64url without padding per the VirusTotal v3 specification: <code>base64.urlsafe_b64encode(url.encode()).rstrip(b'=').decode()</code>.</p>
+  <h3 class="sub">6.2 Response Normalization</h3>
+  <p>The <code>lookup_virustotal()</code> function extracts a normalized result dictionary from the raw API response. The normalized structure always contains the same keys regardless of IOC type, allowing all downstream components (risk engine, charts, reports, history) to consume a single consistent schema. Fields extracted include: <code>last_analysis_stats</code> (malicious, suspicious, harmless, undetected, timeout counts), <code>last_analysis_date</code> (UTC string), <code>reputation</code> (for IPs and domains), and per-engine verdicts filtered to flagging engines only.</p>
+  <h3 class="sub">6.3 Error Handling</h3>
+  <p>HTTP error codes are mapped to user-facing messages: <strong>401</strong> (invalid API key), <strong>404</strong> (indicator not found), <strong>429</strong> (rate limit exceeded), and all other 4xx/5xx codes. Network-level exceptions (<code>Timeout</code>, <code>ConnectionError</code>, <code>RequestException</code>) are caught and converted to descriptive error strings. API keys are never included in any error message.</p>
+</div>
+
+<!-- 7 -->
+<hr class="div">
+<div class="section">
+  <h2 class="st">7. Risk Assessment Engine</h2>
+  <p>The <code>classify_risk()</code> function applies transparent, threshold-based classification. Thresholds are defined as named module-level constants (<code>MALICIOUS_THRESHOLD = 3</code>, <code>SUSPICIOUS_ENGINE_THRESHOLD = 2</code>) and can be adjusted without modifying classification logic.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Condition</th><th>Risk Level</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>malicious engines &ge; 3</td>
+          <td><span class="rc rc-m">&#128308; MALICIOUS</span></td>
+          <td>Confirmed threat — immediate defensive action required</td>
+        </tr>
+        <tr>
+          <td>malicious &ge; 1 <em>or</em> suspicious &ge; 2</td>
+          <td><span class="rc rc-s">&#128992; SUSPICIOUS</span></td>
+          <td>Treat with caution — investigate further before trusting</td>
+        </tr>
+        <tr>
+          <td>malicious = 0 <em>and</em> suspicious = 0</td>
+          <td><span class="rc rc-c">&#128994; NO SIGNIFICANT DETECTIONS</span></td>
+          <td>No engines flagged — does not guarantee safety</td>
+        </tr>
+        <tr>
+          <td>total engines = 0</td>
+          <td><span class="rc rc-i">&#128309; INCONCLUSIVE</span></td>
+          <td>No engine results available for this indicator</td>
+        </tr>
+        <tr>
+          <td>API lookup did not succeed</td>
+          <td><span class="rc rc-f">&#9898; LOOKUP FAILED</span></td>
+          <td>Service unavailable, invalid key, or network error</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>The function returns both a risk level key and a plain-English explanation stating exact detection counts and the threshold crossed. Recommended defensive actions from <code>get_recommended_actions()</code> combine both risk level and IOC type for targeted guidance (e.g. a malicious domain includes a DNS sinkholing step not present for a malicious file hash).</p>
+</div>
+
+<!-- 8 -->
+<hr class="div">
+<div class="section">
+  <h2 class="st">8. Streamlit Dashboard</h2>
+  <p>The dashboard is organized as a three-tab layout: <em>Analyze Indicator</em>, <em>Investigation History</em>, and <em>About</em>. This separates the primary workflow from secondary functions.</p>
+  <h3 class="sub">8.1 Analysis Tab</h3>
+  <p>Presents: (1) a privacy notice warning that indicators may be disclosed to VirusTotal; (2) an API connection status badge; (3) a text input with live type detection; (4) an <em>Analyze Indicator</em> submit button; and after submission: (5) the risk badge, five summary metric cards, Plotly donut and engine bar charts, expandable technical details, expandable recommended actions, and three download buttons.</p>
+  <h3 class="sub">8.2 Theming</h3>
+  <p>Custom CSS is injected via <code>st.markdown(unsafe_allow_html=True)</code>. Palette: background <code>#f0f4f8</code>, sidebar <code>#1a3a5c</code> (dark navy), accent <code>#2c6fad</code> (medium blue). Risk colors follow traffic-light conventions: red for malicious, orange for suspicious, green for clean, blue for inconclusive.</p>
+  <h3 class="sub">8.3 Charts</h3>
+  <p>A donut pie chart shows detection category distribution; a horizontal bar chart lists each engine that flagged the indicator. Both render only when <code>total_engines &gt; 0</code> to prevent empty chart errors, and use transparent backgrounds for clean dashboard integration.</p>
+</div>
+
+<!-- 9 -->
+<hr class="div">
+<div class="section">
+  <h2 class="st">9. Local Investigation History</h2>
+  <p>Investigation records are persisted to a local SQLite database (<code>threatlens_history.db</code>) using Python's standard library <code>sqlite3</code> module. The database is created automatically on first run via <code>CREATE TABLE IF NOT EXISTS</code>. Only metadata is stored — no raw API response payloads, no API keys.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Column</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td><code>id</code></td><td>INTEGER PK</td><td>Auto-incrementing primary key</td></tr>
+        <tr><td><code>indicator</code></td><td>TEXT</td><td>The submitted IOC value</td></tr>
+        <tr><td><code>ioc_type</code></td><td>TEXT</td><td>Human-readable type label (e.g. "IPv4 Address")</td></tr>
+        <tr><td><code>lookup_mode</code></td><td>TEXT</td><td><code>live</code> or <code>demonstration</code></td></tr>
+        <tr><td><code>provider</code></td><td>TEXT</td><td>Intelligence provider name</td></tr>
+        <tr><td><code>risk_level</code></td><td>TEXT</td><td>Risk classification label</td></tr>
+        <tr><td><code>malicious</code>, <code>suspicious</code>, <code>harmless</code>, <code>undetected</code>, <code>total</code></td><td>INTEGER</td><td>Engine detection counts</td></tr>
+        <tr><td><code>timestamp</code></td><td>TEXT</td><td>UTC investigation timestamp (ISO format)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>The history tab provides a search input (substring match on the indicator column), a dropdown type filter, and a <em>Clear All History</em> button that issues <code>DELETE FROM investigations</code> and triggers <code>st.rerun()</code>.</p>
+</div>
+
+<!-- 10 -->
+<hr class="div">
+<div class="section">
+  <h2 class="st">10. Report Generation</h2>
+  <p>Three downloadable report formats are served via <code>st.download_button()</code>. All are generated in memory (<code>io.StringIO</code> / <code>io.BytesIO</code>) — no temporary files are written to disk.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Format</th><th>Contents</th><th>Primary Use Case</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="tag tag-green">CSV</span></td>
+          <td>Two-row flat table (header + data) with all fields including risk explanation.</td>
+          <td>SIEM import, spreadsheet analysis</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-blue">JSON</span></td>
+          <td>Nested object: report metadata, indicator details, provider info, analysis statistics, risk assessment, flagging engine verdicts, recommended actions.</td>
+          <td>Programmatic processing, SOAR ingestion</td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-red">PDF</span></td>
+          <td>Multi-page ReportLab Platypus report: branded header, metadata table, color-coded risk block, detection stats table, flagging engines table, numbered actions list, privacy disclaimer.</td>
+          <td>Audit documentation, stakeholder reporting</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Report filenames: <code>threatlens_{indicator}_{timestamp}.{ext}</code>, indicator sanitized to 40 safe characters. Demonstration-mode reports carry a prominent warning banner in all three formats.</p>
+</div>
+
+<!-- 11 -->
+<hr class="div">
+<div class="section">
+  <h2 class="st">11. Security &amp; Privacy Design</h2>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Control</th><th>Implementation Detail</th></tr></thead>
+      <tbody>
+        <tr><td><strong>API key protection</strong></td><td>Keys read exclusively from environment variables or Streamlit secrets. Never stored in SQLite, written to disk, displayed in the UI, logged, or included in error messages.</td></tr>
+        <tr><td><strong>No file upload</strong></td><td>Only hash strings are accepted for file investigations. No file content is ever sent to any external service.</td></tr>
+        <tr><td><strong>No URL fetching</strong></td><td>URLs are submitted as strings for reputation lookup only. The application never opens, fetches, or renders suspicious URLs.</td></tr>
+        <tr><td><strong>Safe HTTP timeouts</strong></td><td>All API requests use a 20-second timeout (<code>VT_TIMEOUT = 20</code>) to prevent hanging connections.</td></tr>
+        <tr><td><strong>Minimal data storage</strong></td><td>Only investigation metadata is persisted to SQLite. Raw API response payloads are discarded after processing.</td></tr>
+        <tr><td><strong>Privacy notice</strong></td><td>A visible warning is displayed before every external lookup, informing users that submitted indicators may be disclosed to VirusTotal.</td></tr>
+        <tr><td><strong>Input validation before submission</strong></td><td>Indicators are validated and typed before any network request is made. Malformed inputs are rejected with a descriptive error in the UI.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 12 -->
+<hr class="div">
+<div class="section">
+  <h2 class="st">12. Demonstration Mode</h2>
+  <p>When no <code>VIRUSTOTAL_API_KEY</code> is present, ThreatLens switches automatically to demonstration mode. A distinct set of pre-defined sample datasets — one per IOC type — is returned without making any API call. The sample data represents realistic detection distributions (e.g. a high-detection IP, a clean SHA-1, a moderately detected URL) and exercises all application code paths identically to a live lookup.</p>
+  <div class="callout warn">
+    <strong>Transparency at every level:</strong> the sidebar shows a yellow warning badge, the analysis tab displays a blue info banner, result sections carry a "Demonstration Mode" label, and all generated reports include a prominent disclaimer. The distinction between live intelligence and demonstration data is never ambiguous.
+  </div>
+</div>
+
+<!-- 13 -->
+<hr class="div">
+<div class="section">
+  <h2 class="st">13. Installation &amp; Configuration</h2>
+  <h3 class="sub">13.1 Requirements</h3>
+  <p>Python 3.11 or later. Tested on Windows 11 (x64, 8 GB RAM), compatible with macOS and Linux. No GPU or machine learning framework required. A free VirusTotal API key is optional (free tier: 4 req/min, 500 req/day).</p>
+  <h3 class="sub">13.2 Installation Steps</h3>
+  <ol class="rl">
+    <li>Clone the repository: <code>git clone https://github.com/your-username/threatlens.git</code></li>
+    <li>Create a virtual environment: <code>python -m venv .venv</code></li>
+    <li>Activate it (Windows PowerShell): <code>.venv\Scripts\Activate.ps1</code></li>
+    <li>Install dependencies: <code>pip install -r requirements.txt</code></li>
+    <li>Set the API key (optional, current session): <code>$env:VIRUSTOTAL_API_KEY = "your_key_here"</code></li>
+    <li>Launch the dashboard: <code>streamlit run app.py</code></li>
+  </ol>
+  <h3 class="sub">13.3 Persistent API Key (Windows)</h3>
+  <div class="arch">[System.Environment]::SetEnvironmentVariable("VIRUSTOTAL_API_KEY", "your_key_here", "User")
+# Restart your terminal after running this command.</div>
+</div>
+
+<!-- 14 -->
+<hr class="div">
+<div class="section">
+  <h2 class="st">14. Limitations &amp; Future Work</h2>
+  <h3 class="sub">14.1 Current Limitations</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Limitation</th><th>Detail</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Coverage gaps</strong></td><td>VirusTotal aggregates results from partner vendors. Zero detections do not guarantee an indicator is safe — zero-day threats, novel malware, and regional threats may go undetected.</td></tr>
+        <tr><td><strong>Data staleness</strong></td><td>The <code>last_analysis_date</code> field reflects when VirusTotal last analyzed the indicator, which may be days or weeks before the lookup.</td></tr>
+        <tr><td><strong>API rate limits</strong></td><td>The free tier allows 4 requests per minute and 500 per day. Exceeding these limits causes HTTP 429 errors, which the application handles gracefully with a clear message.</td></tr>
+        <tr><td><strong>Single provider</strong></td><td>Only VirusTotal is integrated. Cross-validation with additional intelligence sources is not available in the current version.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h3 class="sub">14.2 Proposed Future Enhancements</h3>
+  <ul class="rl">
+    <li><strong>Additional providers</strong> — AlienVault OTX, Shodan, AbuseIPDB, and Cisco Talos following the same normalized result schema.</li>
+    <li><strong>Bulk IOC analysis</strong> — Accept a CSV or text file of multiple indicators and process them sequentially with rate-limit awareness.</li>
+    <li><strong>MITRE ATT&amp;CK mapping</strong> — Cross-reference flagging engine verdicts against the MITRE ATT&amp;CK framework.</li>
+    <li><strong>STIX/TAXII export</strong> — Export investigation results in STIX 2.1 format for SIEM and SOAR platform ingestion.</li>
+    <li><strong>Configurable thresholds</strong> — Allow users to adjust risk classification thresholds through the dashboard UI.</li>
+  </ul>
+</div>
+
+<!-- 15 -->
+<hr class="div">
+<div class="section">
+  <h2 class="st">15. Conclusion</h2>
+  <p>ThreatLens demonstrates that a fully functional, professionally presented cybersecurity tool can be built within a single Python source file without sacrificing code quality, security, or usability. The application successfully integrates with the VirusTotal v3 API, applies a transparent risk assessment methodology, and delivers results through a polished interactive dashboard with multi-format report generation.</p>
+  <p>The project fulfills all stated objectives: genuine API integration, honest treatment of demonstration data, local investigation persistence, professional PDF reporting, and a clean dashboard suitable for portfolio presentation. The architecture is designed for extensibility — adding a second intelligence provider requires implementing one lookup function and one demo dataset, with all downstream rendering, classification, and report generation code reused without modification.</p>
+  <p>ThreatLens represents a solid foundation for a production-grade threat intelligence workbench and illustrates practical skills in Python development, REST API integration, cybersecurity analysis workflows, and data visualization.</p>
+</div>
+
+<!-- APPENDIX A -->
+<hr class="div">
+<div class="section">
+  <h2 class="st">Appendix A: Function Reference</h2>
+  <p>All 26 functions defined in <code>app.py</code>, listed by layer with their purpose.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Function</th><th>Layer</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>init_db()</code></td><td><span class="tag tag-grey">Database</span></td><td>Create investigations table if not exists</td></tr>
+        <tr><td><code>save_investigation()</code></td><td><span class="tag tag-grey">Database</span></td><td>Persist an investigation record to SQLite</td></tr>
+        <tr><td><code>load_history()</code></td><td><span class="tag tag-grey">Database</span></td><td>Load all records as a Pandas DataFrame</td></tr>
+        <tr><td><code>clear_history()</code></td><td><span class="tag tag-grey">Database</span></td><td>Delete all rows from the investigations table</td></tr>
+        <tr><td><code>classify_indicator()</code></td><td><span class="tag tag-blue">Validation</span></td><td>Detect IOC type, normalize, reject malformed input</td></tr>
+        <tr><td><code>_vt_headers()</code></td><td><span class="tag tag-red">API</span></td><td>Build VirusTotal request headers from the API key</td></tr>
+        <tr><td><code>_vt_request()</code></td><td><span class="tag tag-red">API</span></td><td>Execute GET request, handle HTTP errors and timeouts</td></tr>
+        <tr><td><code>lookup_virustotal()</code></td><td><span class="tag tag-red">API</span></td><td>Full VT lookup: build URL, call API, normalize response</td></tr>
+        <tr><td><code>get_demo_result()</code></td><td><span class="tag tag-orange">Demo Mode</span></td><td>Return clearly labelled sample data for a given IOC type</td></tr>
+        <tr><td><code>classify_risk()</code></td><td><span class="tag tag-green">Risk Engine</span></td><td>Apply threshold rules, return risk level key and explanation</td></tr>
+        <tr><td><code>get_recommended_actions()</code></td><td><span class="tag tag-green">Risk Engine</span></td><td>Return defensive action list based on risk level and IOC type</td></tr>
+        <tr><td><code>build_csv_report()</code></td><td><span class="tag tag-purple">Reports</span></td><td>Generate in-memory CSV investigation report</td></tr>
+        <tr><td><code>build_json_report()</code></td><td><span class="tag tag-purple">Reports</span></td><td>Generate structured JSON investigation report</td></tr>
+        <tr><td><code>build_pdf_report()</code></td><td><span class="tag tag-purple">Reports</span></td><td>Generate formatted PDF report using ReportLab Platypus</td></tr>
+        <tr><td><code>render_risk_badge()</code></td><td><span class="tag tag-blue">UI Components</span></td><td>Render color-coded HTML risk classification badge</td></tr>
+        <tr><td><code>render_stat_card()</code></td><td><span class="tag tag-blue">UI Components</span></td><td>Render a metric card with colored left border</td></tr>
+        <tr><td><code>make_detection_chart()</code></td><td><span class="tag tag-blue">UI Components</span></td><td>Build Plotly donut chart of detection category distribution</td></tr>
+        <tr><td><code>make_engine_bar_chart()</code></td><td><span class="tag tag-blue">UI Components</span></td><td>Build Plotly horizontal bar chart of flagging engines</td></tr>
+        <tr><td><code>get_api_key()</code></td><td><span class="tag tag-grey">Dashboard</span></td><td>Retrieve API key from environment variable or Streamlit secrets</td></tr>
+        <tr><td><code>apply_custom_css()</code></td><td><span class="tag tag-grey">Dashboard</span></td><td>Inject custom CSS for blue-and-white theme via st.markdown</td></tr>
+        <tr><td><code>render_header()</code></td><td><span class="tag tag-grey">Dashboard</span></td><td>Render the application title and subtitle header</td></tr>
+        <tr><td><code>render_sidebar()</code></td><td><span class="tag tag-grey">Dashboard</span></td><td>Render sidebar with API status and supported IOC type list</td></tr>
+        <tr><td><code>render_analysis_results()</code></td><td><span class="tag tag-grey">Dashboard</span></td><td>Render full results: badge, cards, charts, details, download buttons</td></tr>
+        <tr><td><code>render_history_section()</code></td><td><span class="tag tag-grey">Dashboard</span></td><td>Render history table with search, filter, and clear button</td></tr>
+        <tr><td><code>render_about_section()</code></td><td><span class="tag tag-grey">Dashboard</span></td><td>Render About &amp; Limitations expandable section</td></tr>
+        <tr><td><code>main()</code></td><td><span class="tag tag-grey">Dashboard</span></td><td>Application entry point: page config, CSS, tabs, routing</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<div class="footer">
+  ThreatLens — Cyber Threat Intelligence Analyzer &nbsp;&middot;&nbsp; v1.0.0 &nbsp;&middot;&nbsp; Threat intelligence provided by VirusTotal<br>
+  <span style="font-size:0.68rem;opacity:0.65;">Made with IBM Bob</span>
+</div>
+
+</div><!-- /page -->
+</body>
+</html>
